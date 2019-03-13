@@ -28,7 +28,9 @@ import org.springframework.util.ClassUtils;
 /**
  * {@link ApplicationListener} that replaces the liquibase {@link ServiceLocator} with a
  * version that works with Spring Boot executable archives.
- *
+ * 如果存在，则使用springboot相关的版本进行替代 ClasspathLoggingApplicationListener
+ * 程序启动时，讲classpath打印到debug日志，启动失败时classpath打印到info日志 LoggingApplicationListener
+ * 根据配置初始化日志系统log 接着4，再讲springboot的profiles和配置文件加载
  * @author Phillip Webb
  * @author Dave Syer
  */
@@ -52,6 +54,8 @@ public class LiquibaseServiceLocatorApplicationListener
 	private static class LiquibasePresent {
 
 		public void replaceServiceLocator() {
+			// 如果classpath中存在liquibase.servicelocator.CustomResolverServiceLocator，那么将其替换成适用于springboot的版本
+			// 外部扩展引入springboot
 			CustomResolverServiceLocator customResolverServiceLocator = new CustomResolverServiceLocator(
 					new SpringPackageScanClassResolver(logger));
 			ServiceLocator.setInstance(customResolverServiceLocator);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link SocketTargetServerConnection}.
@@ -75,13 +75,16 @@ public class SocketTargetServerConnectionTests {
 		this.server.start();
 		ByteChannel channel = this.connection.open(10);
 		long startTime = System.currentTimeMillis();
-		assertThatExceptionOfType(SocketTimeoutException.class)
-				.isThrownBy(() -> channel.read(ByteBuffer.allocate(5)))
-				.satisfies((ex) -> {
-					long runTime = System.currentTimeMillis() - startTime;
-					assertThat(runTime).isGreaterThanOrEqualTo(10L);
-					assertThat(runTime).isLessThan(10000L);
-				});
+		try {
+			channel.read(ByteBuffer.allocate(5));
+			fail("No socket timeout thrown");
+		}
+		catch (SocketTimeoutException ex) {
+			// Expected
+			long runTime = System.currentTimeMillis() - startTime;
+			assertThat(runTime).isGreaterThanOrEqualTo(10L);
+			assertThat(runTime).isLessThan(10000L);
+		}
 	}
 
 	private static class MockServer {
@@ -159,7 +162,7 @@ public class SocketTargetServerConnectionTests {
 					channel.close();
 				}
 				catch (Exception ex) {
-					throw new RuntimeException(ex);
+					fail();
 				}
 			}
 

@@ -23,7 +23,8 @@ import org.springframework.core.env.Environment;
 /**
  * Event published when a {@link SpringApplication} is starting up and the
  * {@link Environment} is first available for inspection and modification.
- *
+ * 事件在启动时发布
+ * 首先用于检查和修改。
  * @author Dave Syer
  */
 @SuppressWarnings("serial")

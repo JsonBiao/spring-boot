@@ -39,6 +39,13 @@ import org.springframework.http.converter.support.AllEncompassingFormHttpMessage
 /**
  * {@link ApplicationListener} to trigger early initialization in a background thread of
  * time consuming tasks.
+ *
+ * 对于一些耗时的任务使用一个后台线程尽早触发它们开始执行初始化，这是Springboot的缺省行为。
+ * 这些初始化动作也可以叫做预初始化。
+ *
+ * 设置系统属性spring.backgroundpreinitializer.ignore为true可以禁用该机制。
+ * 该机制被禁用时，相应的初始化任务会发生在前台线程。
+ *
  * <p>
  * Set the {@link #IGNORE_BACKGROUNDPREINITIALIZER_PROPERTY_NAME} system property to
  * {@code true} to disable this mechanism and let such initialization happen in the
@@ -72,12 +79,20 @@ public class BackgroundPreinitializer
 		if (!Boolean.getBoolean(IGNORE_BACKGROUNDPREINITIALIZER_PROPERTY_NAME)
 				&& event instanceof ApplicationStartingEvent
 				&& preinitializationStarted.compareAndSet(false, true)) {
+			//如果没有设置spring.backgroundpreinitializer.ignore为true，
+			//并且当前事件是ApplicationStartingEvent，
+			// 并且preinitializationStarted表明预初始化任务尚未执行
+			// 则 :
+			// 1.先将preinitializationStarted设置为预初始化任务开始执行;
+			// 2. 在1成功的情况下开始执行预初始化任务;
 			performPreinitialization();
 		}
 		if ((event instanceof ApplicationReadyEvent
 				|| event instanceof ApplicationFailedEvent)
 				&& preinitializationStarted.get()) {
 			try {
+				// 如果到了应用就绪或者已经失败的时候，预初始化已经开始并且可能尚未结束,
+				// 等到他结束，也就是要等到 preinitializationComplete 变成 0
 				preinitializationComplete.await();
 			}
 			catch (InterruptedException ex) {
@@ -88,6 +103,8 @@ public class BackgroundPreinitializer
 
 	private void performPreinitialization() {
 		try {
+			// 使用一个新的线程执行预初始化任务，使用 preinitializationComplete
+			// 在前台主线程和该新背景线程之间协调任务的执行情况。
 			Thread thread = new Thread(new Runnable() {
 
 				@Override
@@ -98,6 +115,7 @@ public class BackgroundPreinitializer
 					runSafely(new MBeanFactoryInitializer());
 					runSafely(new JacksonInitializer());
 					runSafely(new CharsetInitializer());
+					// 预初始化任务执行完成，将preinitializationComplete减为0。
 					preinitializationComplete.countDown();
 				}
 
@@ -117,6 +135,10 @@ public class BackgroundPreinitializer
 			// This will fail on GAE where creating threads is prohibited. We can safely
 			// continue but startup will be slightly slower as the initialization will now
 			// happen on the main thread.
+			// 针对GAE的处理，GAE上创建线程是被禁止的。
+			// 这种情况下直接将preinitializationComplete减为0。
+			//
+			// 这种情况下我们可以安全地进行初始化，不会稍微慢一些因为预初始化任务会在前台主线程中完成。
 			preinitializationComplete.countDown();
 		}
 	}

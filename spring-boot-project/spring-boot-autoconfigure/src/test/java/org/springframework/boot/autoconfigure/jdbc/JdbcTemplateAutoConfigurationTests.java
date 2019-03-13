@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 package org.springframework.boot.autoconfigure.jdbc;
-
-import java.util.Collections;
 
 import javax.sql.DataSource;
 
@@ -43,7 +41,6 @@ import static org.mockito.Mockito.mock;
  * @author Dave Syer
  * @author Stephane Nicoll
  * @author Kazuki Shimizu
- * @author Dan Zheng
  */
 public class JdbcTemplateAutoConfigurationTests {
 
@@ -189,21 +186,6 @@ public class JdbcTemplateAutoConfigurationTests {
 	}
 
 	@Test
-	public void testDependencyToFlywayWithJdbcTemplateMixed() {
-		this.contextRunner
-				.withUserConfiguration(NamedParameterDataSourceMigrationValidator.class)
-				.withPropertyValues("spring.flyway.locations:classpath:db/city")
-				.withConfiguration(AutoConfigurations.of(FlywayAutoConfiguration.class))
-				.run((context) -> {
-					assertThat(context).hasNotFailed();
-					assertThat(context.getBean(JdbcTemplate.class)).isNotNull();
-					assertThat(context.getBean(
-							NamedParameterDataSourceMigrationValidator.class).count)
-									.isEqualTo(0);
-				});
-	}
-
-	@Test
 	public void testDependencyToLiquibase() {
 		this.contextRunner.withUserConfiguration(DataSourceMigrationValidator.class)
 				.withPropertyValues(
@@ -214,23 +196,6 @@ public class JdbcTemplateAutoConfigurationTests {
 					assertThat(context).hasNotFailed();
 					assertThat(context.getBean(DataSourceMigrationValidator.class).count)
 							.isEqualTo(0);
-				});
-	}
-
-	@Test
-	public void testDependencyToLiquibaseWithJdbcTemplateMixed() {
-		this.contextRunner
-				.withUserConfiguration(NamedParameterDataSourceMigrationValidator.class)
-				.withPropertyValues(
-						"spring.liquibase.changeLog:classpath:db/changelog/db.changelog-city.yaml")
-				.withConfiguration(
-						AutoConfigurations.of(LiquibaseAutoConfiguration.class))
-				.run((context) -> {
-					assertThat(context).hasNotFailed();
-					assertThat(context.getBean(JdbcTemplate.class)).isNotNull();
-					assertThat(context.getBean(
-							NamedParameterDataSourceMigrationValidator.class).count)
-									.isEqualTo(0);
 				});
 	}
 
@@ -309,18 +274,6 @@ public class JdbcTemplateAutoConfigurationTests {
 		DataSourceMigrationValidator(JdbcTemplate jdbcTemplate) {
 			this.count = jdbcTemplate.queryForObject("SELECT COUNT(*) from CITY",
 					Integer.class);
-		}
-
-	}
-
-	static class NamedParameterDataSourceMigrationValidator {
-
-		private final Integer count;
-
-		NamedParameterDataSourceMigrationValidator(
-				NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
-			this.count = namedParameterJdbcTemplate.queryForObject(
-					"SELECT COUNT(*) from CITY", Collections.emptyMap(), Integer.class);
 		}
 
 	}

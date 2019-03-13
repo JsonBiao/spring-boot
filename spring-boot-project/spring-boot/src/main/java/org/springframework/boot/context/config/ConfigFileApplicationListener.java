@@ -92,6 +92,8 @@ import org.springframework.util.StringUtils;
  * locations or specific files.
  * <p>
  *
+ *
+ * 重要（读取加载springboot配置文件）
  * @author Dave Syer
  * @author Phillip Webb
  * @author Stephane Nicoll
@@ -171,6 +173,7 @@ public class ConfigFileApplicationListener
 	private void onApplicationEnvironmentPreparedEvent(
 			ApplicationEnvironmentPreparedEvent event) {
 		List<EnvironmentPostProcessor> postProcessors = loadPostProcessors();
+		// 添加自己作为处理器， 加载application.properties文件
 		postProcessors.add(this);
 		AnnotationAwareOrderComparator.sort(postProcessors);
 		for (EnvironmentPostProcessor postProcessor : postProcessors) {
@@ -187,6 +190,7 @@ public class ConfigFileApplicationListener
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
 			SpringApplication application) {
+		// 加载项目中的配置文件
 		addPropertySources(environment, application.getResourceLoader());
 	}
 
@@ -197,6 +201,7 @@ public class ConfigFileApplicationListener
 
 	/**
 	 * Add config file property sources to the specified environment.
+	 * 将配置文件属性源添加到指定的环境中。
 	 * @param environment the environment to add source to
 	 * @param resourceLoader the resource loader
 	 * @see #addPostProcessors(ConfigurableApplicationContext)
@@ -285,6 +290,7 @@ public class ConfigFileApplicationListener
 
 	/**
 	 * Loads candidate property sources and configures the active profiles.
+	 * 加载候选属性源并配置活动概要文件。
 	 */
 	private class Loader {
 
@@ -312,8 +318,10 @@ public class ConfigFileApplicationListener
 			this.environment = environment;
 			this.placeholdersResolver = new PropertySourcesPlaceholdersResolver(
 					this.environment);
+			// 获取类加载器
 			this.resourceLoader = (resourceLoader != null) ? resourceLoader
 					: new DefaultResourceLoader();
+			// 获取propertySourceLoaders
 			this.propertySourceLoaders = SpringFactoriesLoader.loadFactories(
 					PropertySourceLoader.class, getClass().getClassLoader());
 		}
@@ -323,7 +331,18 @@ public class ConfigFileApplicationListener
 			this.processedProfiles = new LinkedList<>();
 			this.activatedProfiles = false;
 			this.loaded = new LinkedHashMap<>();
+			/*
+			 * 初始化配置文件
+			 * 1）判断是否指定了profile，如果没有，添加默认环境：default。后面的解析流程会解析default文件，
+			 * 比如：application-default.yml、application-default.properties。
+			 *
+			 * 2）添加一个null的profile，主要用来加载没有指定profile的配置文件，
+			 * 比如：application.properties因为 profiles 采用了 LIFO 队列，后进先出。
+			 * 所以会先加载profile为null的配置文件，也就是匹配application.properties、application.yml。
+			 */
 			initializeProfiles();
+
+			// 定位解析资源文件
 			while (!this.profiles.isEmpty()) {
 				Profile profile = this.profiles.poll();
 				if (profile != null && !profile.isDefaultProfile()) {
@@ -334,6 +353,7 @@ public class ConfigFileApplicationListener
 				this.processedProfiles.add(profile);
 			}
 			resetEnvironmentProfiles(this.processedProfiles);
+			// 对加载过的配置文件进行排序
 			load(null, this::getNegativeProfileFilter,
 					addToLoaded(MutablePropertySources::addFirst, true));
 			addLoadedPropertySources();
@@ -343,6 +363,10 @@ public class ConfigFileApplicationListener
 		 * Initialize profile information from both the {@link Environment} active
 		 * profiles and any {@code spring.profiles.active}/{@code spring.profiles.include}
 		 * properties that are already set.
+		 *
+		 * 初始化来自{@link Environment}活动的两个配置文件信息
+		 * 配置文件和任何{@code spring.profiles.active} / { @code spring.profiles.include }
+		 * 已经设置的属性。
 		 */
 		private void initializeProfiles() {
 			// The default profile for these purposes is represented as null. We add it
@@ -441,14 +465,22 @@ public class ConfigFileApplicationListener
 
 		private void load(Profile profile, DocumentFilterFactory filterFactory,
 				DocumentConsumer consumer) {
+			// 获取默认的配置文件路径
 			getSearchLocations().forEach((location) -> {
 				boolean isFolder = location.endsWith("/");
 				Set<String> names = isFolder ? getSearchNames() : NO_SEARCH_NAMES;
+				// 循环加载
 				names.forEach(
 						(name) -> load(location, name, profile, filterFactory, consumer));
 			});
 		}
 
+
+		/**
+		 * 1）获取默认的配置文件路径，有4种。
+		 * 2）遍历所有的路径，拼装配置文件名称。
+		 * 3）再遍历解析器，选择yml或者properties解析，将解析结果添加到集合MutablePropertySources当中
+		 */
 		private void load(String location, String name, Profile profile,
 				DocumentFilterFactory filterFactory, DocumentConsumer consumer) {
 			if (!StringUtils.hasText(name)) {

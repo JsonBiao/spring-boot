@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,6 +107,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.atLeastOnce;
@@ -769,11 +770,17 @@ public class SpringApplicationTests {
 		ExitStatusException failure = new ExitStatusException();
 		willThrow(failure).given(listener)
 				.onApplicationEvent(isA(ApplicationReadyEvent.class));
-		assertThatExceptionOfType(RuntimeException.class).isThrownBy(application::run);
-		verify(listener).onApplicationEvent(isA(ApplicationReadyEvent.class));
-		verify(listener, never()).onApplicationEvent(isA(ApplicationFailedEvent.class));
-		assertThat(exitCodeListener.getExitCode()).isEqualTo(11);
-		assertThat(this.output.toString()).contains("Application run failed");
+		try {
+			application.run();
+			fail("Run should have failed with a RuntimeException");
+		}
+		catch (RuntimeException ex) {
+			verify(listener).onApplicationEvent(isA(ApplicationReadyEvent.class));
+			verify(listener, never())
+					.onApplicationEvent(isA(ApplicationFailedEvent.class));
+			assertThat(exitCodeListener.getExitCode()).isEqualTo(11);
+			assertThat(this.output.toString()).contains("Application run failed");
+		}
 	}
 
 	@Test
@@ -848,7 +855,12 @@ public class SpringApplicationTests {
 		ExitCodeListener listener = new ExitCodeListener();
 		application.addListeners(listener);
 		application.setWebApplicationType(WebApplicationType.NONE);
-		assertThatIllegalStateException().isThrownBy(application::run);
+		try {
+			application.run();
+			fail("Did not throw");
+		}
+		catch (IllegalStateException ex) {
+		}
 		verify(handler).registerExitCode(11);
 		assertThat(listener.getExitCode()).isEqualTo(11);
 	}
@@ -868,7 +880,12 @@ public class SpringApplicationTests {
 		ExitCodeListener listener = new ExitCodeListener();
 		application.addListeners(listener);
 		application.setWebApplicationType(WebApplicationType.NONE);
-		assertThatIllegalStateException().isThrownBy(application::run);
+		try {
+			application.run();
+			fail("Did not throw");
+		}
+		catch (IllegalStateException ex) {
+		}
 		verify(handler).registerExitCode(11);
 		assertThat(listener.getExitCode()).isEqualTo(11);
 	}
@@ -888,7 +905,12 @@ public class SpringApplicationTests {
 		ExitCodeListener listener = new ExitCodeListener();
 		application.addListeners(listener);
 		application.setWebApplicationType(WebApplicationType.NONE);
-		assertThatExceptionOfType(RuntimeException.class).isThrownBy(application::run);
+		try {
+			application.run();
+			fail("Did not throw");
+		}
+		catch (RuntimeException ex) {
+		}
 		ArgumentCaptor<RuntimeException> exceptionCaptor = ArgumentCaptor
 				.forClass(RuntimeException.class);
 		verify(handler).registerLoggedException(exceptionCaptor.capture());
@@ -976,12 +998,16 @@ public class SpringApplicationTests {
 		ApplicationListener<ApplicationEvent> listener = mock(ApplicationListener.class);
 		SpringApplication application = new SpringApplication(ExampleConfig.class);
 		application.addListeners(listener);
-		assertThatExceptionOfType(ApplicationContextException.class)
-				.isThrownBy(application::run);
-		verifyListenerEvents(listener, ApplicationStartingEvent.class,
-				ApplicationEnvironmentPreparedEvent.class,
-				ApplicationContextInitializedEvent.class, ApplicationPreparedEvent.class,
-				ApplicationFailedEvent.class);
+		try {
+			application.run();
+			fail("Run should have failed with an ApplicationContextException");
+		}
+		catch (ApplicationContextException ex) {
+			verifyListenerEvents(listener, ApplicationStartingEvent.class,
+					ApplicationEnvironmentPreparedEvent.class,
+					ApplicationContextInitializedEvent.class,
+					ApplicationPreparedEvent.class, ApplicationFailedEvent.class);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -992,12 +1018,16 @@ public class SpringApplicationTests {
 				BrokenPostConstructConfig.class);
 		application.setWebApplicationType(WebApplicationType.NONE);
 		application.addListeners(listener);
-		assertThatExceptionOfType(BeanCreationException.class)
-				.isThrownBy(application::run);
-		verifyListenerEvents(listener, ApplicationStartingEvent.class,
-				ApplicationEnvironmentPreparedEvent.class,
-				ApplicationContextInitializedEvent.class, ApplicationPreparedEvent.class,
-				ApplicationFailedEvent.class);
+		try {
+			application.run();
+			fail("Run should have failed with a BeanCreationException");
+		}
+		catch (BeanCreationException ex) {
+			verifyListenerEvents(listener, ApplicationStartingEvent.class,
+					ApplicationEnvironmentPreparedEvent.class,
+					ApplicationContextInitializedEvent.class,
+					ApplicationPreparedEvent.class, ApplicationFailedEvent.class);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1008,9 +1038,13 @@ public class SpringApplicationTests {
 		SpringApplication application = new SpringApplication(ExampleConfig.class);
 		application.addInitializers((applicationContext) -> applicationContext
 				.addApplicationListener(listener));
-		assertThatExceptionOfType(ApplicationContextException.class)
-				.isThrownBy(application::run);
-		verifyListenerEvents(listener, ApplicationFailedEvent.class);
+		try {
+			application.run();
+			fail("Run should have failed with an ApplicationContextException");
+		}
+		catch (ApplicationContextException ex) {
+			verifyListenerEvents(listener, ApplicationFailedEvent.class);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1022,9 +1056,13 @@ public class SpringApplicationTests {
 		application.setWebApplicationType(WebApplicationType.NONE);
 		application.addInitializers((applicationContext) -> applicationContext
 				.addApplicationListener(listener));
-		assertThatExceptionOfType(BeanCreationException.class)
-				.isThrownBy(application::run);
-		verifyListenerEvents(listener, ApplicationFailedEvent.class);
+		try {
+			application.run();
+			fail("Run should have failed with a BeanCreationException");
+		}
+		catch (BeanCreationException ex) {
+			verifyListenerEvents(listener, ApplicationFailedEvent.class);
+		}
 	}
 
 	@Test

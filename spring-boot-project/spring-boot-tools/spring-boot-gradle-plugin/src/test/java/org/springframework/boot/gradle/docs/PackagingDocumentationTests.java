@@ -17,15 +17,11 @@
 package org.springframework.boot.gradle.docs;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -112,8 +108,8 @@ public class PackagingDocumentationTests {
 
 	@Test
 	public void bootWarIncludeDevtools() throws IOException {
-		jarFile(new File(this.gradleBuild.getProjectDir(),
-				"spring-boot-devtools-1.2.3.RELEASE.jar"));
+		new File(this.gradleBuild.getProjectDir(),
+				"spring-boot-devtools-1.2.3.RELEASE.jar").createNewFile();
 		this.gradleBuild.script("src/main/gradle/packaging/boot-war-include-devtools")
 				.build("bootWar");
 		File file = new File(this.gradleBuild.getProjectDir(),
@@ -200,14 +196,7 @@ public class PackagingDocumentationTests {
 		File bootJar = new File(this.gradleBuild.getProjectDir(),
 				"build/libs/" + this.gradleBuild.getProjectDir().getName() + "-boot.jar");
 		assertThat(bootJar).isFile();
-	}
 
-	protected void jarFile(File file) throws IOException {
-		try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(file))) {
-			jar.putNextEntry(new ZipEntry("META-INF/MANIFEST.MF"));
-			new Manifest().write(jar);
-			jar.closeEntry();
-		}
 	}
 
 }

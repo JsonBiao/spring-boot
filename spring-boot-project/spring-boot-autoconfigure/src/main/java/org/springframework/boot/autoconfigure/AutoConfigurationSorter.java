@@ -52,6 +52,7 @@ class AutoConfigurationSorter {
 	}
 
 	public List<String> getInPriorityOrder(Collection<String> classNames) {
+		// 获取@AutoConfigureBefore @AutoConfigureAfter对应的处理类
 		AutoConfigurationClasses classes = new AutoConfigurationClasses(
 				this.metadataReaderFactory, this.autoConfigurationMetadata, classNames);
 		List<String> orderedClassNames = new ArrayList<>(classNames);
@@ -59,6 +60,7 @@ class AutoConfigurationSorter {
 		Collections.sort(orderedClassNames);
 		// Then sort by order
 		orderedClassNames.sort((o1, o2) -> {
+			// 获取 AutoConfigureOrder的排序值
 			int i1 = classes.get(o1).getOrder();
 			int i2 = classes.get(o2).getOrder();
 			return Integer.compare(i1, i2);
@@ -126,8 +128,10 @@ class AutoConfigurationSorter {
 						this.classes.put(className, autoConfigurationClass);
 					}
 					if (available) {
+						// 添加自动配置之前需要调用的类
 						addToClasses(metadataReaderFactory, autoConfigurationMetadata,
 								autoConfigurationClass.getBefore(), false);
+						// 添加自动配置之后需要调用的类
 						addToClasses(metadataReaderFactory, autoConfigurationMetadata,
 								autoConfigurationClass.getAfter(), false);
 					}

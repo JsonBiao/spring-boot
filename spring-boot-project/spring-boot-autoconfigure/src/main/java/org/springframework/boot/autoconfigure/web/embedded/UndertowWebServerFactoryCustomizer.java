@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,6 @@ import org.springframework.util.unit.DataSize;
  * @author Yulin Qin
  * @author Stephane Nicoll
  * @author Phillip Webb
- * @author Arstiom Yudovin
  * @since 2.0.0
  */
 public class UndertowWebServerFactoryCustomizer implements
@@ -107,7 +106,7 @@ public class UndertowWebServerFactoryCustomizer implements
 
 	private void customizeConnectionTimeout(ConfigurableUndertowWebServerFactory factory,
 			Duration connectionTimeout) {
-		factory.addBuilderCustomizers((builder) -> builder.setServerOption(
+		factory.addBuilderCustomizers((builder) -> builder.setSocketOption(
 				UndertowOptions.NO_REQUEST_TIMEOUT, (int) connectionTimeout.toMillis()));
 	}
 

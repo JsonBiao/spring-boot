@@ -16,8 +16,10 @@
 
 package org.springframework.boot.actuate.autoconfigure.cache;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.actuate.cache.CachesEndpoint;
 import org.springframework.boot.actuate.cache.CachesEndpointWebExtension;
@@ -46,8 +48,9 @@ public class CachesEndpointAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public CachesEndpoint cachesEndpoint(Map<String, CacheManager> cacheManagers) {
-		return new CachesEndpoint(cacheManagers);
+	public CachesEndpoint cachesEndpoint(
+			ObjectProvider<Map<String, CacheManager>> cacheManagers) {
+		return new CachesEndpoint(cacheManagers.getIfAvailable(LinkedHashMap::new));
 	}
 
 	@Bean

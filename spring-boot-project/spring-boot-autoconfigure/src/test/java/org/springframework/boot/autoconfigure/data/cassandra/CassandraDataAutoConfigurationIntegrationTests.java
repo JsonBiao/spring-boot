@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.containers.CassandraContainer;
 
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.cassandra.city.City;
 import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.boot.testsupport.testcontainers.SkippableContainer;
+import org.springframework.boot.testsupport.testcontainers.CassandraContainer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.cassandra.config.CassandraSessionFactoryBean;
 import org.springframework.data.cassandra.config.SchemaAction;
@@ -44,8 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CassandraDataAutoConfigurationIntegrationTests {
 
 	@ClassRule
-	public static SkippableContainer<CassandraContainer<?>> cassandra = new SkippableContainer<>(
-			CassandraContainer::new);
+	public static CassandraContainer cassandra = new CassandraContainer();
 
 	private AnnotationConfigApplicationContext context;
 
@@ -53,8 +51,7 @@ public class CassandraDataAutoConfigurationIntegrationTests {
 	public void setUp() {
 		this.context = new AnnotationConfigApplicationContext();
 		TestPropertyValues
-				.of("spring.data.cassandra.port="
-						+ cassandra.getContainer().getFirstMappedPort(),
+				.of("spring.data.cassandra.port=" + cassandra.getMappedPort(),
 						"spring.data.cassandra.read-timeout=24000",
 						"spring.data.cassandra.connect-timeout=10000")
 				.applyTo(this.context.getEnvironment());
@@ -99,9 +96,7 @@ public class CassandraDataAutoConfigurationIntegrationTests {
 
 	private void createTestKeyspaceIfNotExists() {
 		Cluster cluster = Cluster.builder().withoutJMXReporting()
-				.withPort(cassandra.getContainer().getFirstMappedPort())
-				.addContactPoint(cassandra.getContainer().getContainerIpAddress())
-				.build();
+				.withPort(cassandra.getMappedPort()).addContactPoint("localhost").build();
 		try (Session session = cluster.connect()) {
 			session.execute("CREATE KEYSPACE IF NOT EXISTS boot_test"
 					+ "  WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };");

@@ -214,8 +214,7 @@ public class UndertowServletWebServerFactoryTests
 				.isThrownBy(() -> testRestrictedSSLProtocolsAndCipherSuites(
 						new String[] { "TLSv1.2" },
 						new String[] { "TLS_EMPTY_RENEGOTIATION_INFO_SCSV" }))
-				.isInstanceOfAny(SSLException.class, SSLHandshakeException.class,
-						SocketException.class);
+				.isInstanceOfAny(SSLHandshakeException.class, SocketException.class);
 	}
 
 	@Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,12 @@
 
 package org.springframework.boot.actuate.trace.http.reactive;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.time.Duration;
 import java.util.EnumSet;
+
+import javax.servlet.ServletException;
 
 import org.junit.Test;
 import reactor.core.publisher.Mono;
@@ -30,11 +33,10 @@ import org.springframework.boot.actuate.trace.http.Include;
 import org.springframework.boot.actuate.web.trace.reactive.HttpTraceWebFilter;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
-import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebExchangeDecorator;
-import org.springframework.web.server.WebFilterChain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -54,8 +56,8 @@ public class HttpTraceWebFilterTests {
 			this.tracer, EnumSet.allOf(Include.class));
 
 	@Test
-	public void filterTracesExchange() {
-		executeFilter(
+	public void filterTracesExchange() throws ServletException, IOException {
+		this.filter.filter(
 				MockServerWebExchange
 						.from(MockServerHttpRequest.get("https://api.example.com")),
 				(exchange) -> Mono.empty()).block(Duration.ofSeconds(30));
@@ -63,8 +65,9 @@ public class HttpTraceWebFilterTests {
 	}
 
 	@Test
-	public void filterCapturesSessionIdWhenSessionIsUsed() {
-		executeFilter(
+	public void filterCapturesSessionIdWhenSessionIsUsed()
+			throws ServletException, IOException {
+		this.filter.filter(
 				MockServerWebExchange
 						.from(MockServerHttpRequest.get("https://api.example.com")),
 				(exchange) -> {
@@ -79,8 +82,9 @@ public class HttpTraceWebFilterTests {
 	}
 
 	@Test
-	public void filterDoesNotCaptureIdOfUnusedSession() {
-		executeFilter(
+	public void filterDoesNotCaptureIdOfUnusedSession()
+			throws ServletException, IOException {
+		this.filter.filter(
 				MockServerWebExchange
 						.from(MockServerHttpRequest.get("https://api.example.com")),
 				(exchange) -> {
@@ -93,10 +97,10 @@ public class HttpTraceWebFilterTests {
 	}
 
 	@Test
-	public void filterCapturesPrincipal() {
+	public void filterCapturesPrincipal() throws ServletException, IOException {
 		Principal principal = mock(Principal.class);
 		given(principal.getName()).willReturn("alice");
-		executeFilter(new ServerWebExchangeDecorator(MockServerWebExchange
+		this.filter.filter(new ServerWebExchangeDecorator(MockServerWebExchange
 				.from(MockServerHttpRequest.get("https://api.example.com"))) {
 
 			@Override
@@ -116,9 +120,22 @@ public class HttpTraceWebFilterTests {
 		assertThat(tracedPrincipal.getName()).isEqualTo("alice");
 	}
 
-	private Mono<Void> executeFilter(ServerWebExchange exchange, WebFilterChain chain) {
-		return this.filter.filter(exchange, chain)
-				.then(Mono.defer(() -> exchange.getResponse().setComplete()));
+	@Test
+	public void statusIsAssumedToBe500WhenChainFails()
+			throws ServletException, IOException {
+		try {
+			this.filter
+					.filter(MockServerWebExchange
+							.from(MockServerHttpRequest.get("https://api.example.com")),
+							(exchange) -> Mono.error(new RuntimeException()))
+					.block(Duration.ofSeconds(30));
+			fail();
+		}
+		catch (Exception ex) {
+			assertThat(this.repository.findAll()).hasSize(1);
+			assertThat(this.repository.findAll().get(0).getResponse().getStatus())
+					.isEqualTo(500);
+		}
 	}
 
 }

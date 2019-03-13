@@ -85,6 +85,8 @@ import org.springframework.util.StringUtils;
  * instance ids are particularly useful). For service binding you might find that Spring
  * Cloud is more convenient and more robust against potential changes in Cloud Foundry.
  *
+ * 其主要作用是对于spring-cloud的提供支持
+ *
  * @author Dave Syer
  * @author Andy Wilkinson
  */

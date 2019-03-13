@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,6 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.mock;
@@ -107,7 +106,6 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 	public void clear() {
 		super.clear();
 		this.loggingSystem.cleanUp();
-		((LoggerContext) StaticLoggerBinder.getSingleton().getLoggerFactory()).stop();
 	}
 
 	@Test
@@ -142,9 +140,8 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 	}
 
 	@Test
-	public void defaultConfigConfiguresAConsoleAppender() {
+	public void testBasicConfigLocation() {
 		this.loggingSystem.beforeInitialize();
-		this.loggingSystem.initialize(this.initializationContext, null, null);
 		assertThat(getConsoleAppender()).isNotNull();
 	}
 
@@ -178,11 +175,11 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 		}
 	}
 
-	@Test
+	@Test(expected = IllegalStateException.class)
 	public void testNonexistentConfigLocation() {
 		this.loggingSystem.beforeInitialize();
-		assertThatIllegalStateException().isThrownBy(() -> this.loggingSystem.initialize(
-				this.initializationContext, "classpath:logback-nonexistent.xml", null));
+		this.loggingSystem.initialize(this.initializationContext,
+				"classpath:logback-nonexistent.xml", null);
 	}
 
 	@Test

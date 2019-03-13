@@ -31,6 +31,8 @@ import org.springframework.util.StringUtils;
  * {@code spring.application.name} property is used to create the ID. If the property is
  * not set {@code application} is used.
  *
+ * 初始化contextId
+ *
  * @author Dave Syer
  * @author Andy Wilkinson
  */

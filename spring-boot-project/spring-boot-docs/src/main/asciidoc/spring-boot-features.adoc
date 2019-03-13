@@ -835,26 +835,6 @@ negated profiles may match.
 YAML files cannot be loaded by using the `@PropertySource` annotation. So, in the case
 that you need to load values that way, you need to use a properties file.
 
-Using the multi YAML document syntax in profile-specific YAML files can lead to unexpected
-behavior. For example, consider the following config in a file called `application-dev.yml`,
-with the `dev` profile being active:
-
-[source,yaml,indent=0]
-----
-	server:
-	  port: 8000
-	---
-	spring:
-	  profiles: !test
-	  security:
-	    user:
-	      password: weak
-----
-
-In the example above, profile negation and profile expressions will not behave as expected.
-We recommend that you don't combine profile-specific YAML files and multiple YAML documents and stick
-to using only one of them.
-
 
 
 [[boot-features-external-config-typesafe-configuration-properties]]
@@ -2005,35 +1985,6 @@ However, properties can be added to the `Environment` by using the relaxed rules
 
 
 
-[[boot-features-internationalization]]
-== Internationalization
-Spring Boot supports localized messages so that your application can cater to users
-of different language preferences. By default, Spring Boot looks for the presence of
-a `messages` resource bundle at the root of the classpath.
-
-NOTE: The auto-configuration applies when the default properties file for the configured
-resource bundle is available (i.e. `messages.properties` by default). If your resource
-bundle contains only language-specific properties files, you are required to add the
-default.
-
-The basename of the resource bundle as well as several other attributes can be configured
-using the `spring.messages` namespace, as shown in the following example:
-
-[source,properties,indent=0]
-----
-	spring.messages.basename=messages,config.i18n.messages
-	spring.messages.fallback-to-system-locale=false
-----
-
-TIP: `spring.messages.basename` supports comma-separated list of locations, either a
-package qualifier or a resource resolved from the classpath root.
-
-See {sc-spring-boot-autoconfigure}/context/MessageSourceProperties.{sc-ext}[
-`MessageSourceProperties`] for more supported options.
-
-
-
-
 [[boot-features-json]]
 == JSON
 Spring Boot provides integration with three JSON mapping libraries:
@@ -2172,7 +2123,7 @@ If you need to add or customize converters, you can use Spring Boot's
 
 [source,java,indent=0]
 ----
-	import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+	import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 	import org.springframework.context.annotation.*;
 	import org.springframework.http.converter.*;
 
@@ -6424,7 +6375,7 @@ configured as it requires an `AsyncTaskExecutor` implementation (named
 an `AsyncConfigurer` wrapping your custom `Executor`.
 
 The auto-configured `TaskExecutorBuilder` allows you to easily create instances that
-reproduce what the auto-configuration does by default.
+reproduces what the auto-configuration does by default.
 ====
 
 The thread pool uses 8 core threads that can grow and shrink according to the load. Those
@@ -7695,28 +7646,6 @@ generate the default snippets. The following example shows a
 
 
 
-[[boot-features-testing-spring-boot-applications-testing-autoconfigured-rest-docs-web-test-client]]
-===== Auto-configured Spring REST Docs Tests with WebTestClient
-`@AutoConfigureRestDocs` can also be used with `WebTestClient`. You can inject it by using
-`@Autowired` and use it in your tests as you normally would when using `@WebFluxTest` and
-Spring REST Docs, as shown in the following example:
-
-[source,java,indent=0]
-----
-include::{code-examples}/test/autoconfigure/restdocs/webclient/UsersDocumentationTests.java[tag=source]
-----
-
-If you require more control over Spring REST Docs configuration than offered by the
-attributes of `@AutoConfigureRestDocs`, you can use a
-`RestDocsWebTestClientConfigurationCustomizer` bean, as shown in the following example:
-
-[source,java,indent=0]
-----
-include::{code-examples}/test/autoconfigure/restdocs/webclient/AdvancedConfigurationExample.java[tag=configuration]
-----
-
-
-
 [[boot-features-testing-spring-boot-applications-testing-autoconfigured-rest-docs-rest-assured]]
 ===== Auto-configured Spring REST Docs Tests with REST Assured
 `@AutoConfigureRestDocs` makes a `RequestSpecification` bean, preconfigured to use Spring
@@ -8094,14 +8023,6 @@ published jar. The file should list your configuration classes under the
 	com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
 ----
 
-[NOTE]
-====
-Auto-configurations must be loaded that way _only_. Make sure that they are defined in
-a specific package space and that they are never the target of component scanning.
-Furthermore, auto-configuration classes should not enable component scanning to find
-additional components. Specific ``@Import``s should be used instead.
-====
-
 You can use the
 {sc-spring-boot-autoconfigure}/AutoConfigureAfter.{sc-ext}[`@AutoConfigureAfter`] or
 {sc-spring-boot-autoconfigure}/AutoConfigureBefore.{sc-ext}[`@AutoConfigureBefore`]
@@ -8113,6 +8034,13 @@ If you want to order certain auto-configurations that should not have any direct
 knowledge of each other, you can also use `@AutoConfigureOrder`. That annotation has the
 same semantic as the regular `@Order` annotation but provides a dedicated order for
 auto-configuration classes.
+
+[NOTE]
+====
+Auto-configurations must be loaded that way _only_. Make sure that they are defined in
+a specific package space and that, in particular, they are never the target of component
+scanning.
+====
 
 
 
@@ -8631,12 +8559,6 @@ JUnit 5 dependencies, and configure the Maven or Gradle plugin accordingly. See 
 documentation] for more details. You also need to
 {junit5-documentation}/#writing-tests-test-instance-lifecycle-changing-default[switch test
 instance lifecycle to "per-class"].
-
-To mock Kotlin classes, https://mockk.io/[Mockk] is recommended. If you need the `Mockk`
-equivalent of the Mockito specific
-<<boot-features-testing-spring-boot-applications-mocking-beans,`@MockBean` and `@SpyBean`
-annotations>>, you can use https://github.com/Ninja-Squad/springmockk[SpringMockK] which
-provides similar `@MockkBean` and `@SpykBean` annotations.
 
 
 

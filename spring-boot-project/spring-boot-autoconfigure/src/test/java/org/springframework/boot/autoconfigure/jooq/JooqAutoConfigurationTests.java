@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link JooqAutoConfiguration}.
@@ -90,10 +90,15 @@ public class JooqAutoConfigurationTests {
 							"insert into jooqtest (name) values ('foo');"));
 					dsl.transaction(new AssertFetch(dsl,
 							"select count(*) as total from jooqtest;", "1"));
-					assertThatExceptionOfType(DataIntegrityViolationException.class)
-							.isThrownBy(() -> dsl.transaction(new ExecuteSql(dsl,
-									"insert into jooqtest (name) values ('bar');",
-									"insert into jooqtest (name) values ('foo');")));
+					try {
+						dsl.transaction(new ExecuteSql(dsl,
+								"insert into jooqtest (name) values ('bar');",
+								"insert into jooqtest (name) values ('foo');"));
+						fail("An DataIntegrityViolationException should have been thrown.");
+					}
+					catch (DataIntegrityViolationException ex) {
+						// Ignore
+					}
 					dsl.transaction(new AssertFetch(dsl,
 							"select count(*) as total from jooqtest;", "2"));
 				});
@@ -115,14 +120,19 @@ public class JooqAutoConfigurationTests {
 							"insert into jooqtest_tx (name) values ('foo');"));
 					dsl.transaction(new AssertFetch(dsl,
 							"select count(*) as total from jooqtest_tx;", "1"));
-					assertThatExceptionOfType(DataIntegrityViolationException.class)
-							.isThrownBy(() -> dsl.transaction(new ExecuteSql(dsl,
-									"insert into jooqtest (name) values ('bar');",
-									"insert into jooqtest (name) values ('foo');")));
+					try {
+						dsl.transaction(new ExecuteSql(dsl,
+								"insert into jooqtest (name) values ('bar');",
+								"insert into jooqtest (name) values ('foo');"));
+						fail("A DataIntegrityViolationException should have been thrown.");
+					}
+					catch (DataIntegrityViolationException ex) {
+						// Ignore
+					}
 					dsl.transaction(new AssertFetch(dsl,
 							"select count(*) as total from jooqtest_tx;", "1"));
-				});
 
+				});
 	}
 
 	@Test

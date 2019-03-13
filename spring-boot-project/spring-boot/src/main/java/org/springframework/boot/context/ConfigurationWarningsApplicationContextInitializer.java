@@ -46,6 +46,8 @@ import org.springframework.util.StringUtils;
  * {@link ApplicationContextInitializer} to report warnings for common misconfiguration
  * mistakes.
  *
+ * 扫描包位置不能在 org和org.springframework 下，否者会有警告打印
+ *
  * @author Phillip Webb
  * @since 1.2.0
  */

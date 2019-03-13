@@ -36,7 +36,10 @@ import org.springframework.util.StringUtils;
 /**
  * {@link ApplicationListener} that delegates to other listeners that are specified under
  * a {@literal context.listener.classes} environment property.
+ * ApplicationEvent事件监听委托
  *
+ * 把Listener转发给配置的这些class处理，这样可以支持外围代码不去写spring.factories中的org.springframework.context.ApplicationListener相关配置，
+ * 保持springboot原来代码的稳定
  * @author Dave Syer
  * @author Phillip Webb
  */

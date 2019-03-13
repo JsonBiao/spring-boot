@@ -26,7 +26,6 @@
 		<maven.version>3.5.4</maven.version>
 		<maven-resolver.version>1.1.1</maven-resolver.version>
 		<spock.version>1.0-groovy-2.4</spock.version>
-		<testcontainers.version>1.10.6</testcontainers.version>
 		<dependency-management-plugin.version>1.0.6.RELEASE</dependency-management-plugin.version>
 	</properties>
 	<scm>
@@ -96,6 +95,11 @@
 				<groupId>com.squareup.okhttp3</groupId>
 				<artifactId>mockwebserver</artifactId>
 				<version>3.9.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers</artifactId>
+				<version>1.8.3</version>
 			</dependency>
 			<dependency>
 				<groupId>com.vaadin.external.google</groupId>
@@ -237,13 +241,6 @@
 				<groupId>org.spockframework</groupId>
 				<artifactId>spock-spring</artifactId>
 				<version>${spock.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.testcontainers</groupId>
-				<artifactId>testcontainers-bom</artifactId>
-				<version>${testcontainers.version}</version>
-				<scope>import</scope>
-				<type>pom</type>
 			</dependency>
 			<dependency>
 				<groupId>org.zeroturnaround</groupId>
@@ -677,9 +674,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<configuration>
-							<source>${java.version}</source>
-						</configuration>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>

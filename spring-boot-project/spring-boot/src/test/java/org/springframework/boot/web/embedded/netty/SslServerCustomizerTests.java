@@ -23,7 +23,8 @@ import org.junit.Test;
 import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.server.WebServerException;
 
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link SslServerCustomizer}.
@@ -40,10 +41,15 @@ public class SslServerCustomizerTests {
 		ssl.setKeyStore("src/test/resources/test.jks");
 		ssl.setKeyStoreProvider("com.example.KeyStoreProvider");
 		SslServerCustomizer customizer = new SslServerCustomizer(ssl, null, null);
-		assertThatIllegalStateException()
-				.isThrownBy(() -> customizer.getKeyManagerFactory(ssl, null))
-				.withCauseInstanceOf(NoSuchProviderException.class)
-				.withMessageContaining("com.example.KeyStoreProvider");
+		try {
+			customizer.getKeyManagerFactory(ssl, null);
+			fail();
+		}
+		catch (IllegalStateException ex) {
+			Throwable cause = ex.getCause();
+			assertThat(cause).isInstanceOf(NoSuchProviderException.class);
+			assertThat(cause).hasMessageContaining("com.example.KeyStoreProvider");
+		}
 	}
 
 	@Test
@@ -53,10 +59,15 @@ public class SslServerCustomizerTests {
 		ssl.setTrustStore("src/test/resources/test.jks");
 		ssl.setTrustStoreProvider("com.example.TrustStoreProvider");
 		SslServerCustomizer customizer = new SslServerCustomizer(ssl, null, null);
-		assertThatIllegalStateException()
-				.isThrownBy(() -> customizer.getTrustManagerFactory(ssl, null))
-				.withCauseInstanceOf(NoSuchProviderException.class)
-				.withMessageContaining("com.example.TrustStoreProvider");
+		try {
+			customizer.getTrustManagerFactory(ssl, null);
+			fail();
+		}
+		catch (IllegalStateException ex) {
+			Throwable cause = ex.getCause();
+			assertThat(cause).isInstanceOf(NoSuchProviderException.class);
+			assertThat(cause).hasMessageContaining("com.example.TrustStoreProvider");
+		}
 	}
 
 	@Test
@@ -64,10 +75,15 @@ public class SslServerCustomizerTests {
 			throws Exception {
 		Ssl ssl = new Ssl();
 		SslServerCustomizer customizer = new SslServerCustomizer(ssl, null, null);
-		assertThatIllegalStateException()
-				.isThrownBy(() -> customizer.getKeyManagerFactory(ssl, null))
-				.withCauseInstanceOf(WebServerException.class)
-				.withMessageContaining("Could not load key store 'null'");
+		try {
+			customizer.getKeyManagerFactory(ssl, null);
+			fail();
+		}
+		catch (IllegalStateException ex) {
+			Throwable cause = ex.getCause();
+			assertThat(cause).isInstanceOf(WebServerException.class);
+			assertThat(cause).hasMessageContaining("Could not load key store 'null'");
+		}
 	}
 
 }

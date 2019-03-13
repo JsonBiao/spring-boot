@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -532,7 +532,7 @@ public abstract class AbstractServletWebServerFactoryTests {
 				.isEqualTo("test");
 	}
 
-	@Test
+	@Test(expected = IOException.class)
 	public void sslNeedsClientAuthenticationFailsWithoutClientCertificate()
 			throws Exception {
 		AbstractServletWebServerFactory factory = getFactory();
@@ -547,8 +547,7 @@ public abstract class AbstractServletWebServerFactoryTests {
 				.build();
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
 				httpClient);
-		String localUrl = getLocalUrl("https", "/test.txt");
-		assertThatIOException().isThrownBy(() -> getResponse(localUrl, requestFactory));
+		getResponse(getLocalUrl("https", "/test.txt"), requestFactory);
 	}
 
 	@Test
@@ -912,13 +911,17 @@ public abstract class AbstractServletWebServerFactoryTests {
 	public void portClashOfPrimaryConnectorResultsInPortInUseException()
 			throws IOException {
 		doWithBlockedPort((port) -> {
-			assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> {
+			try {
 				AbstractServletWebServerFactory factory = getFactory();
 				factory.setPort(port);
 				AbstractServletWebServerFactoryTests.this.webServer = factory
 						.getWebServer();
 				AbstractServletWebServerFactoryTests.this.webServer.start();
-			}).satisfies((ex) -> handleExceptionCausedByBlockedPort(ex, port));
+				fail();
+			}
+			catch (RuntimeException ex) {
+				handleExceptionCausedByBlockedPort(ex, port);
+			}
 		});
 	}
 
@@ -926,13 +929,17 @@ public abstract class AbstractServletWebServerFactoryTests {
 	public void portClashOfSecondaryConnectorResultsInPortInUseException()
 			throws IOException {
 		doWithBlockedPort((port) -> {
-			assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> {
+			try {
 				AbstractServletWebServerFactory factory = getFactory();
 				addConnector(port, factory);
 				AbstractServletWebServerFactoryTests.this.webServer = factory
 						.getWebServer();
 				AbstractServletWebServerFactoryTests.this.webServer.start();
-			}).satisfies((ex) -> handleExceptionCausedByBlockedPort(ex, port));
+				fail();
+			}
+			catch (RuntimeException ex) {
+				handleExceptionCausedByBlockedPort(ex, port);
+			}
 		});
 	}
 

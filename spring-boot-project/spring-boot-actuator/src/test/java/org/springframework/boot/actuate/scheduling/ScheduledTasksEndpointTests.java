@@ -17,20 +17,17 @@
 package org.springframework.boot.actuate.scheduling;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.junit.Test;
 
 import org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint.CronTaskDescription;
-import org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint.CustomTriggerTaskDescription;
 import org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint.FixedDelayTaskDescription;
 import org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint.FixedRateTaskDescription;
 import org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint.ScheduledTasksReport;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
@@ -56,7 +53,6 @@ public class ScheduledTasksEndpointTests {
 		run(CronScheduledMethod.class, (tasks) -> {
 			assertThat(tasks.getFixedDelay()).isEmpty();
 			assertThat(tasks.getFixedRate()).isEmpty();
-			assertThat(tasks.getCustom()).isEmpty();
 			assertThat(tasks.getCron()).hasSize(1);
 			CronTaskDescription description = (CronTaskDescription) tasks.getCron()
 					.get(0);
@@ -71,7 +67,6 @@ public class ScheduledTasksEndpointTests {
 		run(CronTriggerTask.class, (tasks) -> {
 			assertThat(tasks.getFixedRate()).isEmpty();
 			assertThat(tasks.getFixedDelay()).isEmpty();
-			assertThat(tasks.getCustom()).isEmpty();
 			assertThat(tasks.getCron()).hasSize(1);
 			CronTaskDescription description = (CronTaskDescription) tasks.getCron()
 					.get(0);
@@ -86,7 +81,6 @@ public class ScheduledTasksEndpointTests {
 		run(FixedDelayScheduledMethod.class, (tasks) -> {
 			assertThat(tasks.getCron()).isEmpty();
 			assertThat(tasks.getFixedRate()).isEmpty();
-			assertThat(tasks.getCustom()).isEmpty();
 			assertThat(tasks.getFixedDelay()).hasSize(1);
 			FixedDelayTaskDescription description = (FixedDelayTaskDescription) tasks
 					.getFixedDelay().get(0);
@@ -102,7 +96,6 @@ public class ScheduledTasksEndpointTests {
 		run(FixedDelayTriggerTask.class, (tasks) -> {
 			assertThat(tasks.getCron()).isEmpty();
 			assertThat(tasks.getFixedRate()).isEmpty();
-			assertThat(tasks.getCustom()).isEmpty();
 			assertThat(tasks.getFixedDelay()).hasSize(1);
 			FixedDelayTaskDescription description = (FixedDelayTaskDescription) tasks
 					.getFixedDelay().get(0);
@@ -118,7 +111,6 @@ public class ScheduledTasksEndpointTests {
 		run(FixedRateScheduledMethod.class, (tasks) -> {
 			assertThat(tasks.getCron()).isEmpty();
 			assertThat(tasks.getFixedDelay()).isEmpty();
-			assertThat(tasks.getCustom()).isEmpty();
 			assertThat(tasks.getFixedRate()).hasSize(1);
 			FixedRateTaskDescription description = (FixedRateTaskDescription) tasks
 					.getFixedRate().get(0);
@@ -134,7 +126,6 @@ public class ScheduledTasksEndpointTests {
 		run(FixedRateTriggerTask.class, (tasks) -> {
 			assertThat(tasks.getCron()).isEmpty();
 			assertThat(tasks.getFixedDelay()).isEmpty();
-			assertThat(tasks.getCustom()).isEmpty();
 			assertThat(tasks.getFixedRate()).hasSize(1);
 			FixedRateTaskDescription description = (FixedRateTaskDescription) tasks
 					.getFixedRate().get(0);
@@ -142,22 +133,6 @@ public class ScheduledTasksEndpointTests {
 			assertThat(description.getInterval()).isEqualTo(2000);
 			assertThat(description.getRunnable().getTarget())
 					.isEqualTo(FixedRateTriggerRunnable.class.getName());
-		});
-	}
-
-	@Test
-	public void taskWithCustomTriggerIsReported() {
-		run(CustomTriggerTask.class, (tasks) -> {
-			assertThat(tasks.getCron()).isEmpty();
-			assertThat(tasks.getFixedDelay()).isEmpty();
-			assertThat(tasks.getFixedRate()).isEmpty();
-			assertThat(tasks.getCustom()).hasSize(1);
-			CustomTriggerTaskDescription description = (CustomTriggerTaskDescription) tasks
-					.getCustom().get(0);
-			assertThat(description.getRunnable().getTarget())
-					.isEqualTo(CustomTriggerRunnable.class.getName());
-			assertThat(description.getTrigger())
-					.isEqualTo(CustomTriggerTask.trigger.toString());
 		});
 	}
 
@@ -237,17 +212,6 @@ public class ScheduledTasksEndpointTests {
 
 	}
 
-	private static class CustomTriggerTask implements SchedulingConfigurer {
-
-		private static final Trigger trigger = (context) -> new Date();
-
-		@Override
-		public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-			taskRegistrar.addTriggerTask(new CustomTriggerRunnable(), trigger);
-		}
-
-	}
-
 	private static class CronTriggerRunnable implements Runnable {
 
 		@Override
@@ -267,15 +231,6 @@ public class ScheduledTasksEndpointTests {
 	}
 
 	private static class FixedRateTriggerRunnable implements Runnable {
-
-		@Override
-		public void run() {
-
-		}
-
-	}
-
-	private static class CustomTriggerRunnable implements Runnable {
 
 		@Override
 		public void run() {

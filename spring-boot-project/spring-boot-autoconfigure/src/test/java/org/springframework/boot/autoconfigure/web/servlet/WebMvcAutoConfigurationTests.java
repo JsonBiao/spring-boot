@@ -45,7 +45,6 @@ import org.springframework.boot.test.context.assertj.AssertableWebApplicationCon
 import org.springframework.boot.test.context.runner.ContextConsumer;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.web.server.WebServerFactoryCustomizerBeanPostProcessor;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.filter.OrderedFormContentFilter;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.ApplicationContext;
@@ -74,7 +73,6 @@ import org.springframework.web.bind.support.ConfigurableWebBindingInitializer;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.filter.FormContentFilter;
 import org.springframework.web.filter.HiddenHttpMethodFilter;
-import org.springframework.web.filter.RequestContextFilter;
 import org.springframework.web.servlet.HandlerAdapter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.HandlerMapping;
@@ -915,33 +913,6 @@ public class WebMvcAutoConfigurationTests {
 		assertThat(mediaTypes).containsOnly(MediaType.ALL);
 	}
 
-	@Test
-	public void requestContextFilterIsAutoConfigured() {
-		this.contextRunner.run((context) -> assertThat(context)
-				.hasSingleBean(RequestContextFilter.class));
-	}
-
-	@Test
-	public void whenUserDefinesARequestContextFilterTheAutoConfiguredRegistrationBacksOff() {
-		this.contextRunner.withUserConfiguration(RequestContextFilterConfiguration.class)
-				.run((context) -> {
-					assertThat(context).hasSingleBean(RequestContextFilter.class);
-					assertThat(context).hasBean("customRequestContextFilter");
-				});
-	}
-
-	@Test
-	public void whenUserDefinesARequestContextFilterRegistrationTheAutoConfiguredFilterBacksOff() {
-		this.contextRunner
-				.withUserConfiguration(
-						RequestContextFilterRegistrationConfiguration.class)
-				.run((context) -> {
-					assertThat(context).hasSingleBean(FilterRegistrationBean.class);
-					assertThat(context).hasBean("customRequestContextFilterRegistration");
-					assertThat(context).doesNotHaveBean(RequestContextFilter.class);
-				});
-	}
-
 	private void assertCacheControl(AssertableWebApplicationContext context) {
 		Map<String, Object> handlerMap = getHandlerMap(
 				context.getBean("resourceHandlerMapping", HandlerMapping.class));
@@ -1257,27 +1228,6 @@ public class WebMvcAutoConfigurationTests {
 		@Override
 		public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
 			configurer.setTaskExecutor(this.taskExecutor);
-		}
-
-	}
-
-	@Configuration
-	static class RequestContextFilterConfiguration {
-
-		@Bean
-		public RequestContextFilter customRequestContextFilter() {
-			return new RequestContextFilter();
-		}
-
-	}
-
-	@Configuration
-	static class RequestContextFilterRegistrationConfiguration {
-
-		@Bean
-		public FilterRegistrationBean<RequestContextFilter> customRequestContextFilterRegistration() {
-			return new FilterRegistrationBean<RequestContextFilter>(
-					new RequestContextFilter());
 		}
 
 	}

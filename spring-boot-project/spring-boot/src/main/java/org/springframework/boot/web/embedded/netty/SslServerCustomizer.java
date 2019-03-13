@@ -152,7 +152,9 @@ public class SslServerCustomizer implements NettyServerCustomizer {
 		if (resource == null) {
 			return null;
 		}
-		return loadStore(type, provider, resource, password);
+		else {
+			return loadStore(type, provider, resource, password);
+		}
 	}
 
 	private KeyStore loadStore(String type, String provider, String resource,

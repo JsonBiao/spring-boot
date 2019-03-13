@@ -41,6 +41,11 @@ import org.springframework.core.env.ConfigurableEnvironment;
  * consider setting the {@code LANG} environment variable to an explicit
  * character-encoding value (e.g. "en_GB.UTF-8").
  *
+ *
+ * 在springboot环境准备完成以后运行，获取环境中的系统环境参数，检测当前系统环境的file.encoding和spring.mandatory-file-encoding设置的值是否一样,如果不
+ * 则抛出异常
+ * 如果不配置spring.mandatory-file-encoding则不检查
+ *
  * @author Dave Syer
  * @author Madhura Bhave
  */

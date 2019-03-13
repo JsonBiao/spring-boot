@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,7 @@ import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
 /**
- * {@link Endpoint @Endpoint} to expose information about an application's scheduled
- * tasks.
+ * {@link Endpoint} to expose information about an application's scheduled tasks.
  *
  * @author Andy Wilkinson
  * @since 2.0.0
@@ -79,8 +78,6 @@ public class ScheduledTasksEndpoint {
 
 		private final List<TaskDescription> fixedRate;
 
-		private final List<TaskDescription> custom;
-
 		private ScheduledTasksReport(
 				Map<TaskType, List<TaskDescription>> descriptionsByType) {
 			this.cron = descriptionsByType.getOrDefault(TaskType.CRON,
@@ -88,8 +85,6 @@ public class ScheduledTasksEndpoint {
 			this.fixedDelay = descriptionsByType.getOrDefault(TaskType.FIXED_DELAY,
 					Collections.emptyList());
 			this.fixedRate = descriptionsByType.getOrDefault(TaskType.FIXED_RATE,
-					Collections.emptyList());
-			this.custom = descriptionsByType.getOrDefault(TaskType.CUSTOM_TRIGGER,
 					Collections.emptyList());
 		}
 
@@ -103,10 +98,6 @@ public class ScheduledTasksEndpoint {
 
 		public List<TaskDescription> getFixedRate() {
 			return this.fixedRate;
-		}
-
-		public List<TaskDescription> getCustom() {
-			return this.custom;
 		}
 
 	}
@@ -152,7 +143,7 @@ public class ScheduledTasksEndpoint {
 				}
 				return new FixedDelayTaskDescription(triggerTask, periodicTrigger);
 			}
-			return new CustomTriggerTaskDescription(triggerTask);
+			return null;
 		}
 
 		protected TaskDescription(TaskType type, Runnable runnable) {
@@ -259,26 +250,6 @@ public class ScheduledTasksEndpoint {
 	}
 
 	/**
-	 * A description of a {@link TriggerTask} with a custom {@link Trigger}.
-	 *
-	 * @since 2.1.3
-	 */
-	public static final class CustomTriggerTaskDescription extends TaskDescription {
-
-		private final String trigger;
-
-		private CustomTriggerTaskDescription(TriggerTask task) {
-			super(TaskType.CUSTOM_TRIGGER, task.getRunnable());
-			this.trigger = task.getTrigger().toString();
-		}
-
-		public String getTrigger() {
-			return this.trigger;
-		}
-
-	}
-
-	/**
 	 * A description of a {@link Task Task's} {@link Runnable}.
 	 *
 	 * @author Andy Wilkinson
@@ -306,7 +277,7 @@ public class ScheduledTasksEndpoint {
 
 	private enum TaskType {
 
-		CRON, CUSTOM_TRIGGER, FIXED_DELAY, FIXED_RATE
+		CRON, FIXED_DELAY, FIXED_RATE
 
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 
 package org.springframework.boot.actuate.autoconfigure.endpoint.web.documentation;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.junit.Test;
 
@@ -45,22 +42,6 @@ public class ThreadDumpEndpointDocumentationTests
 
 	@Test
 	public void threadDump() throws Exception {
-		ReentrantLock lock = new ReentrantLock();
-		CountDownLatch latch = new CountDownLatch(1);
-		new Thread(() -> {
-			try {
-				lock.lock();
-				try {
-					latch.await();
-				}
-				finally {
-					lock.unlock();
-				}
-			}
-			catch (InterruptedException ex) {
-				Thread.currentThread().interrupt();
-			}
-		}).start();
 		this.mockMvc.perform(get("/actuator/threaddump")).andExpect(status().isOk())
 				.andDo(MockMvcRestDocumentation.document("threaddump",
 						preprocessResponse(limit("threads")),
@@ -84,21 +65,20 @@ public class ThreadDumpEndpointDocumentationTests
 										.description(
 												"Description of the object on which the "
 														+ "thread is blocked, if any.")
-										.optional().type(JsonFieldType.STRING),
-								fieldWithPath("threads.[].lockInfo")
-										.description(
-												"Object for which the thread is blocked "
-														+ "waiting.")
-										.optional().type(JsonFieldType.OBJECT),
+										.optional(),
+								fieldWithPath("threads.[].lockInfo").description(
+										"Object for which the thread is blocked "
+												+ "waiting.")
+										.optional(),
 								fieldWithPath("threads.[].lockInfo.className")
 										.description(
 												"Fully qualified class name of the lock"
 														+ " object.")
-										.optional().type(JsonFieldType.STRING),
+										.optional(),
 								fieldWithPath("threads.[].lockInfo.identityHashCode")
 										.description(
 												"Identity hash code of the lock object.")
-										.optional().type(JsonFieldType.NUMBER),
+										.optional(),
 								fieldWithPath("threads.[].lockedMonitors").description(
 										"Monitors locked by this thread, if any"),
 								fieldWithPath("threads.[].lockedMonitors.[].className")
@@ -131,7 +111,7 @@ public class ThreadDumpEndpointDocumentationTests
 														+ "synchronizer.")
 												.optional().type(JsonFieldType.STRING),
 								fieldWithPath(
-										"threads.[].lockedSynchronizers.[].identityHashCode")
+										"threads.[].lockedSynchronizers.[].identifyHashCode")
 												.description(
 														"Identity hash code of the locked "
 																+ "synchronizer.")
@@ -207,7 +187,6 @@ public class ThreadDumpEndpointDocumentationTests
 										"Time in milliseconds that the thread has spent "
 												+ "waiting. -1 if thread contention "
 												+ "monitoring is disabled"))));
-		latch.countDown();
 	}
 
 	@Configuration

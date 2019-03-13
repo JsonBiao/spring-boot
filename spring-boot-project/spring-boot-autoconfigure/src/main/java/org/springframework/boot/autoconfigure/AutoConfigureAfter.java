@@ -25,7 +25,8 @@ import java.lang.annotation.Target;
 /**
  * Hint for that an {@link EnableAutoConfiguration auto-configuration} should be applied
  * after other specified auto-configuration classes.
- *
+ * 提示应该应用{@link EnableAutoConfiguration auto-configuration}
+ * 在其他指定的自动配置类之后。
  * @author Phillip Webb
  */
 @Retention(RetentionPolicy.RUNTIME)

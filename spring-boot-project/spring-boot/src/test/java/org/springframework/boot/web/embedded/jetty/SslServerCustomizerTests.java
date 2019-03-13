@@ -34,7 +34,6 @@ import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.server.WebServerException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 /**
  * Tests for {@link SslServerCustomizer}.
@@ -82,17 +81,17 @@ public class SslServerCustomizerTests {
 	}
 
 	@Test
-	public void configureSslWhenSslIsEnabledWithNoKeyStoreThrowsWebServerException() {
+	public void configureSslWhenSslIsEnabledWithNoKeyStoreThrowsWebServerException()
+			throws Exception {
 		Ssl ssl = new Ssl();
 		SslServerCustomizer customizer = new SslServerCustomizer(null, ssl, null, null);
-		assertThatExceptionOfType(Exception.class)
-				.isThrownBy(
-						() -> customizer.configureSsl(new SslContextFactory(), ssl, null))
-				.satisfies((ex) -> {
-					assertThat(ex).isInstanceOf(WebServerException.class);
-					assertThat(ex)
-							.hasMessageContaining("Could not load key store 'null'");
-				});
+		try {
+			customizer.configureSsl(new SslContextFactory(), ssl, null);
+		}
+		catch (Exception ex) {
+			assertThat(ex).isInstanceOf(WebServerException.class);
+			assertThat(ex).hasMessageContaining("Could not load key store 'null'");
+		}
 	}
 
 	private Server createCustomizedServer() {
