@@ -450,7 +450,7 @@ public class SpringApplication {
 	}
 
 	/**
-	 * 获取SpringFactories实例
+	 * 获取SpringFactories实例。
 	 * @param type
 	 * @param <T>
 	 * @return
